@@ -15,6 +15,7 @@ docker build -t serverstatusbot-release -f Dockerfile_release .
 
 # Use Docker run to create + start the container
 # -d: Detached mode (so that we're not stuck with stdout in tty)
-docker run -d --restart always --name serverstatusbot-release-container serverstatusbot-release
+# --net=host: Binding the host allows the container name to inherit the host's hostname
+docker run -d --net=host --restart always --name serverstatusbot-release-container serverstatusbot-release
 
 $env:docker_host = ""

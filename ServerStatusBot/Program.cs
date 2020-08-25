@@ -41,8 +41,9 @@ namespace ServerStatusBot
 
                 await _botClient.SendTextMessageAsync(
                     chatId: _micahmo,
-                    text: $"Status is good. Running on host '{Environment.MachineName}' (platform is {GetOsPlatform()}). Uptime is {DateTimeOffset.UtcNow - _startDateTime} " +
-                          $"(since {startTimeInEt})",
+                    text: string.Join(Environment.NewLine,
+                        $"Status is good. Running on container '{Environment.MachineName}'. Platform is {GetOsPlatform()}.",
+                        $"Bot uptime is {DateTimeOffset.UtcNow - _startDateTime} (since {startTimeInEt})."),
                     parseMode: ParseMode.Html
                 );
             }
