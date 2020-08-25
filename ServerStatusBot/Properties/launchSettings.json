@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ServerStatusBot": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
