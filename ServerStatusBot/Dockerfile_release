@@ -4,5 +4,6 @@ COPY bin/Release/netcoreapp3.1/publish /app
 WORKDIR /app
 COPY token.txt .
 COPY micahmo.txt .
+COPY qBittorrent.txt .
 
 ENTRYPOINT ["dotnet", "ServerStatusBot.dll"]

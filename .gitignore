@@ -352,3 +352,4 @@ MigrationBackup/
 # Ignore token files
 token.txt
 micahmo.txt
+qBittorrent.txt
