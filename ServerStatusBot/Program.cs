@@ -11,7 +11,6 @@ using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using File = System.IO.File;
 
 namespace ServerStatusBot
 {
@@ -23,11 +22,44 @@ namespace ServerStatusBot
         {
             _startDateTime = DateTimeOffset.UtcNow;
 
-            _botClient = new TelegramBotClient(File.ReadAllLines("token.txt")[0]);
-            _micahmo = Convert.ToInt32(File.ReadAllLines("micahmo.txt")[0]);
-            _qBittorrentServer = File.ReadAllLines("qBittorrent.txt")[0];
-            _qBittorrentUsername = File.ReadAllLines("qBittorrent.txt")[1];
-            _qBittorrentPassword = File.ReadAllLines("qBittorrent.txt")[2];
+            string botTokenEnv = Environment.GetEnvironmentVariable("BOT_TOKEN");
+            if (string.IsNullOrEmpty(botTokenEnv))
+            {
+                Console.WriteLine("Error retrieving Telegram bot token. Be sure to set BOT_TOKEN environment variable. " +
+                                  "If running from Visual Studio, set the env vars in settings.env");
+                return;
+            }
+            else
+            {
+                _botClient = new TelegramBotClient(botTokenEnv);
+            }
+
+            string chatIdEnv = Environment.GetEnvironmentVariable("CHAT_ID");
+            if (string.IsNullOrEmpty(chatIdEnv))
+            {
+                Console.WriteLine("Error retrieving chat ID. Be sure to set CHAT_ID environment variable. " +
+                                  "If running from Visual Studio, set the env vars in settings.env");
+                return;
+
+            }
+            else
+            {
+                _chatId = Convert.ToInt32(chatIdEnv);
+            }
+
+            string qBittorrentServerEnv = Environment.GetEnvironmentVariable("QBITTORRENT_SERVER");
+            string qBittorrentUsernameEnv = Environment.GetEnvironmentVariable("QBITTORRENT_USERNAME");
+            string qBittorrentPasswordEnv = Environment.GetEnvironmentVariable("QBITTORRENT_PASSWORD");
+            if (string.IsNullOrEmpty(qBittorrentServerEnv) || string.IsNullOrEmpty(qBittorrentUsernameEnv) || string.IsNullOrEmpty(qBittorrentPasswordEnv))
+            {
+                Console.WriteLine("Warning: Unable to retrieve one or more qBittorrent environment variables. qBittorrent status will be unavailable.");
+            }
+            else
+            {
+                _qBittorrentServer = qBittorrentServerEnv;
+                _qBittorrentUsername = qBittorrentUsernameEnv;
+                _qBittorrentPassword = qBittorrentPasswordEnv;
+            }
 
             _botClient.OnMessage += Bot_OnMessage;
             _botClient.StartReceiving();
@@ -45,19 +77,19 @@ namespace ServerStatusBot
 
             try
             {
-                if (messageText.ToLower() == "/status" && chatId.Identifier == _micahmo.Identifier)
+                if (messageText.ToLower() == "/status" && chatId.Identifier == _chatId.Identifier)
                 {
                     var startTimeInEt = TimeZoneInfo.ConvertTime(_startDateTime, GetEasternTimeZone());
 
                     await _botClient.SendTextMessageAsync(
-                        chatId: _micahmo,
+                        chatId: _chatId,
                         text: string.Join(Environment.NewLine,
                             $"Status is good. Running on container '{Environment.MachineName}'. Platform is {GetOsPlatform()}.",
                             $"Bot uptime is {DateTimeOffset.UtcNow - _startDateTime} (since {startTimeInEt})."),
                         parseMode: ParseMode.Html
                     );
                 }
-                else if (messageText.ToLower() == "/qbittorrentstatus" && chatId.Identifier == _micahmo.Identifier)
+                else if (messageText.ToLower() == "/qbittorrentstatus" && chatId.Identifier == _chatId.Identifier && string.IsNullOrEmpty(_qBittorrentServer) == false)
                 {
                     // Instantiate the client
                     QBittorrentClient qBittorrentClient = new QBittorrentClient(new Uri($"http://{_qBittorrentServer}:8080"));
@@ -74,7 +106,7 @@ namespace ServerStatusBot
                         {
                             // This means the login failed, which we will handle below.
                             await _botClient.SendTextMessageAsync(
-                                chatId: _micahmo,
+                                chatId: _chatId,
                                 text: "There was an error communicating with the qBittorrent server. It may be offline.");
 
                             return;
@@ -84,7 +116,7 @@ namespace ServerStatusBot
                         {
                             // This means the login failed, which we will handle below.
                             await _botClient.SendTextMessageAsync(
-                                chatId: _micahmo,
+                                chatId: _chatId,
                                 text: "There was an error communicating with the qBittorrent server. You may have the wrong username/password.");
 
                             return;
@@ -95,14 +127,14 @@ namespace ServerStatusBot
 
                     // If we get here the server is online.
                     await _botClient.SendTextMessageAsync(
-                        chatId: _micahmo,
+                        chatId: _chatId,
                         text: $"The qBittorrent server is online and running API version {apiVersion}.");
                 }
             }
             catch (Exception ex)
             {
                 await _botClient.SendTextMessageAsync(
-                    chatId: _micahmo,
+                    chatId: _chatId,
                     text: "There was an error processing your request.");
 
                 Trace.WriteLine(string.Join(Environment.NewLine,
@@ -144,7 +176,7 @@ namespace ServerStatusBot
 
         private static TelegramBotClient _botClient;
 
-        private static ChatId _micahmo;
+        private static ChatId _chatId;
 
         private static string _qBittorrentServer;
 

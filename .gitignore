@@ -349,7 +349,5 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-# Ignore token files
-token.txt
-micahmo.txt
-qBittorrent.txt
+# Do not include .env (environment-specific)
+*.env
