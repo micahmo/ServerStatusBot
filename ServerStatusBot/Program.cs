@@ -20,7 +20,6 @@ namespace ServerStatusBot
 
         static void Main(string[] args)
         {
-            //Test
             _startDateTime = DateTimeOffset.UtcNow;
 
             string botTokenEnv = Environment.GetEnvironmentVariable("BOT_TOKEN");
